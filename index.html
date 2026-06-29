@@ -935,8 +935,8 @@ async function sendPlan(){
   btn.textContent='Sending...';
   try{
     await emailjs.send(
-      'YOUR_SERVICE_ID',
-      'YOUR_TEMPLATE_ID',
+      'service_7k5946b',
+      'template_f50v78c',
       {
         times:ranges.length?ranges.map(r=>`${r.date} · ${r.label}`).join('\n'):'No time selected',
         activity:state.vibe||'Not selected',
@@ -958,7 +958,7 @@ async function sendPlan(){
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
-emailjs.init("YOUR_PUBLIC_KEY");
+emailjs.init("yyWLJdYkgbHppHsTG");
 </script>
 </body>
 </html>
