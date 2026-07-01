@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Question For You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FFF7F0;
+  --rose:#C9184A;
+  --peach:#FFB4A2;
+  --plum:#5B2A4D;
+  --ink:#2B1B17;
+  --line:#EADBCF;
+  --good:#3E7C59;
+  --ease:cubic-bezier(0.83,0,0.17,1);
+  --bounce:cubic-bezier(0.34,1.56,0.64,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;overflow-x:hidden;}
+body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--ink);}
+.bg-deco{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(circle at 12% 20%,rgba(255,180,162,0.35),transparent 40%),
+    radial-gradient(circle at 88% 78%,rgba(201,24,74,0.12),transparent 45%);
+}
+.top-progress{position:fixed;top:0;left:0;right:0;height:3px;background:rgba(91,42,77,0.08);z-index:300;}
+.top-progress .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--peach),var(--rose));transition:width .7s var(--ease);}
+
+.app-layout{display:flex;align-items:center;min-height:100vh;position:relative;z-index:1;gap:0;}
+.mascot-col{width:42%;max-width:480px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;min-height:100vh;overflow:hidden;}
+#mascot-stage-wrap{width:100%;max-width:380px;aspect-ratio:1/1;position:relative;}
+#mascot-svg-host{width:100%;height:100%;position:relative;}
+#mascot-bubble{
+  position:absolute;top:6%;right:0;
+  font-family:'Outfit',sans-serif;font-weight:500;font-size:14px;color:var(--ink);
+  background:#fff;border:2px solid var(--plum);border-radius:16px 16px 4px 16px;
+  padding:9px 16px;max-width:170px;text-align:left;
+  box-shadow:2px 3px 0 var(--plum);
+  opacity:0;transform:translateY(6px) scale(0.92);
+  transition:opacity .35s var(--ease),transform .35s var(--ease);
+  pointer-events:none;z-index:6;
+}
+#mascot-bubble.show{opacity:1;transform:translateY(0) scale(1);}
+
+.content-col{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 24px;min-height:100vh;}
+.stage{width:100%;max-width:560px;position:relative;}
+.panel{position:relative;}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:600;margin-bottom:10px;}
+h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(26px,4.5vw,36px);line-height:1.15;margin:0 0 8px;color:var(--plum);}
+p.sub{font-size:15px;color:#7A6A63;margin:0 0 28px;line-height:1.5;}
+
+#screen-ask{text-align:left;}
+.btn-row{display:flex;gap:16px;margin-top:32px;position:relative;min-height:60px;}
+button{font-family:'Outfit',sans-serif;font-weight:600;font-size:15px;cursor:pointer;border:none;}
+.btn-yes{background:var(--rose);color:white;padding:16px 36px;border-radius:100px;box-shadow:0 8px 20px -6px rgba(201,24,74,0.55);transition:transform .25s var(--ease),box-shadow .2s ease;}
+.btn-yes:hover{transform:translateY(-2px) scale(1.03);}
+.btn-no{background:#FFFFFF;color:var(--ink);border:1.5px solid var(--line);padding:16px 32px;border-radius:100px;}
+.btn-no.evasive{position:fixed;z-index:50;}
+
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:28px;}
+.btn-primary{background:var(--rose);color:white;padding:14px 28px;border-radius:100px;font-size:15px;font-weight:600;box-shadow:0 8px 20px -8px rgba(201,24,74,0.5);transition:transform .2s var(--ease),background .2s ease;}
+.btn-primary:disabled{background:#E8C7CF;box-shadow:none;cursor:not-allowed;}
+.btn-primary:not(:disabled):hover{transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:#9A8B83;font-size:14px;font-weight:500;padding:10px 6px;transition:color .2s ease;}
+.btn-ghost:hover{color:var(--ink);}
+
+.cal-wrap{overflow-x:auto;border-radius:16px;border:1px solid var(--line);background:#fff;padding-bottom:14px;}
+.cal-wrap::-webkit-scrollbar{height:8px;}
+.cal-wrap::-webkit-scrollbar-track{background:transparent;}
+.cal-wrap::-webkit-scrollbar-thumb{background:var(--peach);border-radius:8px;}
+table.cal{border-collapse:separate;border-spacing:0;width:100%;min-width:700px;user-select:none;}
+table.cal th,table.cal td{text-align:center;padding:0;}
+table.cal thead th{background:#FCF2EA;padding:10px 6px;font-size:12px;color:var(--plum);position:sticky;top:0;z-index:5;border-bottom:1px solid var(--line);}
+table.cal thead th .dow{display:block;font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;}
+table.cal thead th .dnum{display:block;font-family:'Fraunces',serif;font-size:16px;margin-top:2px;color:var(--ink);}
+table.cal tbody th{background:#FCF2EA;font-size:11.5px;color:#7A6A63;padding:8px 10px;white-space:nowrap;position:sticky;left:0;z-index:4;border-right:1px solid var(--line);}
+table.cal td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+table.cal td:last-child{border-right:none;}
+.slot{width:38px;height:32px;cursor:pointer;transition:background .12s ease;}
+.slot:hover{background:#FCEAE3;}
+.slot.selected{background:var(--rose);}
+.legend{display:flex;align-items:center;gap:8px;font-size:12px;color:#9A8B83;margin-top:12px;}
+.legend .dot{width:10px;height:10px;border-radius:3px;background:var(--rose);display:inline-block;}
+#picked-summary{margin-top:18px;}
+.pick-list{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.pick-list li{font-size:14px;color:var(--plum);font-weight:500;background:#FCF2EA;border-radius:10px;padding:8px 12px;}
+
+.vibe-scroll{max-height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:16px;background:#fff;margin-bottom:16px;}
+.vibe-scroll::-webkit-scrollbar{width:8px;}
+.vibe-scroll::-webkit-scrollbar-track{background:transparent;}
+.vibe-scroll::-webkit-scrollbar-thumb{background:var(--peach);border-radius:8px;}
+.vibe-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14.5px;font-weight:500;transition:background .15s ease;}
+.vibe-row:last-child{border-bottom:none;}
+.vibe-row:hover{background:#FFF8F4;}
+.vibe-row.selected{background:#FFF1EC;color:var(--rose);}
+.vibe-row .emoji{font-size:19px;width:24px;text-align:center;flex-shrink:0;}
+.shuffle-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.btn-shuffle{background:#fff;border:1.5px solid var(--line);border-radius:100px;padding:10px 18px;font-size:13.5px;color:var(--plum);display:flex;align-items:center;gap:8px;transition:border-color .2s ease,transform .2s var(--ease);}
+.btn-shuffle:hover{border-color:var(--peach);}
+.btn-shuffle:active{transform:scale(0.97);}
+.shuffle-display{font-size:13.5px;color:#9A8B83;min-height:18px;font-weight:500;}
+textarea#freeText,textarea#dressNote{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:14px;font-family:'Outfit',sans-serif;font-size:14px;resize:vertical;min-height:64px;}
+textarea#freeText:focus,textarea#dressNote:focus{outline:none;border-color:var(--rose);}
+label.field-label{font-size:12px;color:#9A8B83;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:block;}
+
+.summary-box{background:#FCF2EA;border-radius:16px;padding:20px;margin-bottom:24px;}
+.summary-row{display:flex;gap:10px;font-size:14px;padding:8px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+.summary-row:last-child{border-bottom:none;}
+.summary-row .label{color:#9A8B83;min-width:90px;flex-shrink:0;}
+.summary-row .val{color:var(--ink);font-weight:500;}
+.summary-row .val ul{list-style:none;display:flex;flex-direction:column;gap:4px;}
+
+#screen-success{text-align:left;}
+.success-icon{width:64px;height:64px;margin-bottom:18px;border-radius:50%;background:var(--good);display:flex;align-items:center;justify-content:center;color:white;font-size:30px;}
+
+.screen{display:none;}
+.screen.active{display:block;}
+
+#intro-overlay{position:fixed;inset:0;background:var(--cream);z-index:200;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 24px;}
+#intro-overlay.hidden{display:none;}
+.intro-slide{position:absolute;display:flex;align-items:center;justify-content:center;flex-direction:column;opacity:0;transform:translateY(10px) scale(0.97);filter:blur(6px);transition:opacity .8s var(--ease),transform .8s var(--ease),filter .8s var(--ease);pointer-events:none;}
+.intro-slide.show{opacity:1;transform:translateY(0) scale(1);filter:blur(0);}
+.intro-typewriter{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(28px,6.5vw,42px);color:var(--plum);min-height:1.2em;}
+.intro-cursor{display:inline-block;width:3px;height:1em;background:var(--rose);margin-left:2px;vertical-align:middle;animation:blink .7s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+#transition-stage{position:fixed;inset:0;z-index:150;pointer-events:none;overflow:hidden;}
+
+@keyframes hitFlash{
+  0%  {filter:brightness(1) saturate(1);}
+  8%  {filter:brightness(3.2) saturate(0) drop-shadow(0 0 18px rgba(255,60,60,1));}
+  22% {filter:brightness(2.0) saturate(0.2) drop-shadow(0 0 10px rgba(255,80,80,0.8));}
+  55% {filter:brightness(1.4) saturate(0.6);}
+  100%{filter:brightness(1) saturate(1);}
+}
+@keyframes hitRecoil{
+  0%  {transform:translate(0,0) rotate(0deg) scale(1);}
+  10% {transform:translate(var(--rx,-8px),-4px) rotate(var(--rr,-6deg)) scale(1.06);}
+  28% {transform:translate(var(--rx,-8px),6px) rotate(var(--rr,-6deg)) scale(0.93) scaleX(1.06);}
+  48% {transform:translate(calc(var(--rx,-8px)*1.8),2px) rotate(calc(var(--rr,-6deg)*1.5)) scale(0.88);}
+  70% {transform:translate(calc(var(--rx,-8px)*3.2),-8px) rotate(calc(var(--rr,-6deg)*2.4)) scale(0.80);}
+  100%{transform:translate(calc(var(--rx,-8px)*7),35px) rotate(calc(var(--rr,-6deg)*4.5)) scale(0.55);opacity:0;}
+}
+.hit-flash{animation:hitFlash .42s ease-out 1 forwards;}
+.hit-recoil{animation:hitRecoil .56s cubic-bezier(0.4,0,1,1) 1 forwards;}
+@keyframes impactBurst{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(0.3);}
+  60%{opacity:1;transform:translate(-50%,-50%) scale(1.15);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}
+}
+.impact-burst{
+  position:absolute;left:50%;top:48%;width:64px;height:64px;pointer-events:none;z-index:5;
+  animation:impactBurst .32s ease-out 1 forwards;
+}
+
+@media(max-width:880px){
+  .app-layout{flex-direction:column;}
+  .mascot-col{width:100%;min-height:auto;padding:24px 20px 0;}
+  #mascot-stage-wrap{max-width:220px;}
+  .content-col{min-height:auto;padding:20px 20px 40px;}
+  #mascot-bubble{font-size:12.5px;max-width:140px;padding:7px 12px;}
+}
+</style>
+</head>
+<body>
+
+</head>
+<body>
+
+<div class="top-progress"><div class="fill" id="progress-fill"></div></div>
+
+<div id="intro-overlay">
+  <div class="intro-slide show" id="intro-shapes-splash"></div>
+  <div class="intro-slide" id="intro-1"><p class="intro-typewriter" id="tw-hello"></p></div>
+  <div class="intro-slide" id="intro-3"><p class="intro-typewriter" id="tw-question"></p><div id="tw-emoji" style="font-size:36px;margin-top:10px;opacity:0;transition:opacity .5s ease"></div></div>
+</div>
+
+<div class="bg-deco"></div>
+<div id="transition-stage"></div>
+
+<div class="app-layout">
+  <div class="mascot-col">
+    <div id="mascot-stage-wrap">
+      <div id="mascot-bubble"></div>
+      <div id="mascot-svg-host"></div>
+    </div>
+  </div>
+
+  <div class="content-col">
+    <div class="stage">
+      <div class="panel">
+
+        <div class="screen" id="screen-ask">
+          <div class="eyebrow">A small question</div>
+          <h1>Will you go out with me?</h1>
+          <p class="sub">No pressure. (Okay, maybe a little pressure.)</p>
+          <div class="btn-row" id="btn-row">
+            <button class="btn-yes" id="btn-yes">Yes 💕</button>
+            <button class="btn-no" id="btn-no">No</button>
+          </div>
+        </div>
+
+        <div class="screen" id="screen-calendar">
+          <div class="eyebrow">Step 1 of 3</div>
+          <h1>When works for you?</h1>
+          <p class="sub">Click and drag to select one or more times — over the next two weeks.</p>
+          <div class="cal-wrap"><table class="cal" id="cal-table"></table></div>
+          <div class="legend"><span class="dot"></span> Your picks</div>
+          <div id="picked-summary"></div>
+          <div class="nav-row">
+            <button class="btn-ghost" onclick="goTo('screen-ask')">← Back</button>
+            <button class="btn-primary" id="cal-continue" disabled onclick="goTo('screen-vibe')">Continue →</button>
+          </div>
+        </div>
+
+        <div class="screen" id="screen-vibe">
+          <div class="eyebrow">Step 2 of 3</div>
+          <h1>What sounds good?</h1>
+          <p class="sub">Scroll through and pick whatever you are feeling.</p>
+          <div class="shuffle-row">
+            <button class="btn-shuffle" id="shuffle-btn">🎲 Surprise me</button>
+            <span class="shuffle-display" id="shuffle-display"></span>
+          </div>
+          <div class="vibe-scroll" id="vibe-scroll"></div>
+          <label class="field-label" for="freeText">Or, in your own words</label>
+          <textarea id="freeText" placeholder="e.g. surprise me, or something low-key..."></textarea>
+          <div class="nav-row">
+            <button class="btn-ghost" onclick="goTo('screen-calendar')">← Back</button>
+            <button class="btn-primary" id="vibe-continue" onclick="goTo('screen-dress')">Continue →</button>
+          </div>
+        </div>
+
+        <div class="screen" id="screen-dress">
+          <div class="eyebrow">Step 3 of 3</div>
+          <h1>What is the vibe for your outfit?</h1>
+          <p class="sub">Help me know what you are thinking — so we match the energy. ✨</p>
+          <div class="vibe-scroll" id="dress-scroll"></div>
+          <label class="field-label" for="dressNote" style="margin-top:16px">Anything extra? (optional)</label>
+          <textarea id="dressNote" placeholder="e.g. I will probably wear a sundress, or let me know the vibe..."></textarea>
+          <div class="nav-row">
+            <button class="btn-ghost" onclick="goTo('screen-vibe')">← Back</button>
+            <button class="btn-primary" id="dress-continue" onclick="goTo('screen-confirm')">Continue →</button>
+          </div>
+        </div>
+
+        <div class="screen" id="screen-confirm">
+          <div class="eyebrow">Almost there</div>
+          <h1>Here is the plan</h1>
+          <p class="sub">Double-check it, then send it over.</p>
+          <div class="summary-box" id="summary-box"></div>
+          <div class="nav-row">
+            <button class="btn-ghost" onclick="goTo('screen-dress')">← Back</button>
+            <button class="btn-primary" id="send-btn" onclick="sendPlan()">Send it</button>
+          </div>
+        </div>
+
+        <div class="screen" id="screen-success">
+          <div class="success-icon">✓</div>
+          <h1>Sent!</h1>
+          <p class="sub" id="success-sub">Your answer is on its way. He will see it soon — get ready!</p>
+          <div class="summary-box" id="summary-box-final"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="mascot.js"></script>
+<script>
+const SCREEN_BUBBLES = {
+  'screen-ask':      'go on, click yes...',
+  'screen-calendar': 'drag to pick some times!',
+  'screen-vibe':     'scroll down, lots of ideas',
+  'screen-dress':    'so cute, what will you wear?',
+  'screen-confirm':  'looks good so far?',
+  'screen-success':  'yay!! see you soon',
+};
+const SCREEN_ORDER = ['screen-ask','screen-calendar','screen-vibe','screen-dress','screen-confirm','screen-success'];
+function typeWriter(el, text, baseDelay, onDone){
+  el.textContent='';
+  const SHY_SPOTS = {
+    'Hello there':[{chars:'Hello ',pauseAfter:220},{chars:'there',pauseAfter:0}],
+    'Will you... go out... with me?':[
+      {chars:'Will you',pauseAfter:350},{chars:'...',pauseAfter:500},
+      {chars:' go out',pauseAfter:280},{chars:'...',pauseAfter:600},
+      {chars:' with me?',pauseAfter:0},
+    ],
+  };
+  const chunks=SHY_SPOTS[text]||[{chars:text,pauseAfter:0}];
+  let delay=0;
+  chunks.forEach(chunk=>{
+    Array.from(chunk.chars).forEach(char=>{
+      setTimeout(()=>{el.textContent+=char;},delay);
+      delay+=baseDelay+Math.random()*30;
+    });
+    delay+=chunk.pauseAfter;
+  });
+  setTimeout(onDone, delay+100);
+}
+function buildIntroShapes(){
+  const el=document.getElementById('intro-shapes-splash');
+  el.innerHTML=`
+    <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" style="width:min(320px,90vw);height:auto">
+      <g style="animation:splashWobble1 1.6s ease-in-out infinite">
+        <polygon points="70,50 85,90 55,90" fill="#FFB4A2" stroke="#2B1B17" stroke-width="2"/>
+        <circle cx="65" cy="72" r="3" fill="#2B1B17"/><circle cx="75" cy="72" r="3" fill="#2B1B17"/>
+        <path d="M65 79 Q70 83 75 79" stroke="#2B1B17" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      </g>
+      <g style="animation:splashWobble2 2s ease-in-out infinite">
+        <circle cx="160" cy="75" r="36" fill="#A8DADC" stroke="#2B1B17" stroke-width="2.5"/>
+        <circle cx="150" cy="69" r="4" fill="#2B1B17"/><circle cx="170" cy="69" r="4" fill="#2B1B17"/>
+        <path d="M150 82 Q160 90 170 82" stroke="#2B1B17" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </g>
+      <g style="animation:splashWobble3 1.8s ease-in-out infinite">
+        <rect x="225" y="45" width="60" height="60" rx="8" fill="#FFD166" stroke="#2B1B17" stroke-width="2"/>
+        <circle cx="242" cy="70" r="3.5" fill="#2B1B17"/><circle cx="268" cy="70" r="3.5" fill="#2B1B17"/>
+        <path d="M242 80 Q255 88 268 80" stroke="#2B1B17" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      </g>
+      <g style="animation:splashWobble1 2.2s ease-in-out infinite">
+        <polygon points="40,130 60,170 20,170" fill="#F4A261" stroke="#2B1B17" stroke-width="2"/>
+        <circle cx="35" cy="154" r="2.5" fill="#2B1B17"/><circle cx="45" cy="154" r="2.5" fill="#2B1B17"/>
+        <path d="M35 160 Q40 164 45 160" stroke="#2B1B17" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      </g>
+      <g style="animation:splashWobble2 1.5s ease-in-out infinite">
+        <polygon points="160,120 178,155 142,155" fill="#B5E48C" stroke="#2B1B17" stroke-width="2"/>
+        <circle cx="154" cy="144" r="2.5" fill="#2B1B17"/><circle cx="166" cy="144" r="2.5" fill="#2B1B17"/>
+        <path d="M154 150 Q160 154 166 150" stroke="#2B1B17" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      </g>
+      <g style="animation:splashWobble3 1.9s ease-in-out infinite">
+        <rect x="245" y="120" width="50" height="50" rx="10" fill="#C9B1FF" stroke="#2B1B17" stroke-width="2"/>
+        <circle cx="260" cy="142" r="3" fill="#2B1B17"/><circle cx="280" cy="142" r="3" fill="#2B1B17"/>
+        <path d="M260 153 Q270 159 280 153" stroke="#2B1B17" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      </g>
+    </svg>`;
+  const s=document.createElement('style');
+  s.textContent=`
+    @keyframes splashWobble1{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-8px) rotate(4deg);}}
+    @keyframes splashWobble2{0%,100%{transform:translateY(0) rotate(3deg);}50%{transform:translateY(-10px) rotate(-4deg);}}
+    @keyframes splashWobble3{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-6px) rotate(5deg);}}
+  `;
+  document.head.appendChild(s);
+}
+function playIntro(){
+  const overlay=document.getElementById('intro-overlay');
+  const splash=document.getElementById('intro-shapes-splash');
+  const slide1=document.getElementById('intro-1');
+  const slide3=document.getElementById('intro-3');
+  const twEmoji=document.getElementById('tw-emoji');
+  document.getElementById('tw-hello').innerHTML='<span id="tw-hello-text"></span><span class="intro-cursor"></span>';
+  document.getElementById('tw-question').innerHTML='<span id="tw-q-text"></span><span class="intro-cursor"></span>';
+
+  setTimeout(()=>{
+    splash.classList.remove('show');
+    setTimeout(()=>{
+      slide1.classList.add('show');
+      setTimeout(()=>{
+        typeWriter(document.getElementById('tw-hello-text'),'Hello there',72,()=>{
+          setTimeout(()=>{
+            slide1.classList.remove('show');
+            setTimeout(()=>{
+              slide3.classList.add('show');
+              setTimeout(()=>{
+                typeWriter(document.getElementById('tw-q-text'),'Will you... go out... with me?',68,()=>{
+                  twEmoji.style.opacity='1';
+                  setTimeout(()=>{
+                    overlay.style.transition='opacity .6s ease';
+                    overlay.style.opacity='0';
+                    setTimeout(()=>{
+                      overlay.classList.add('hidden');
+                      overlay.style.opacity='';
+                      goTo('screen-ask', true);
+                    },600);
+                  },900);
+                });
+              },200);
+            },450);
+          },500);
+        });
+      },200);
+    },450);
+  },2000);
+}
+let lastShapeKey=null;
+function randomShapeFor(screenId){
+  if(screenId==='screen-ask') return 'pentagon';
+  let choices=SHAPE_KEYS.filter(k=>k!==lastShapeKey);
+  const pick=choices[Math.floor(Math.random()*choices.length)];
+  lastShapeKey=pick;
+  return pick;
+}
+
+
+function updateProgress(id){
+  const idx=SCREEN_ORDER.indexOf(id);
+  document.getElementById('progress-fill').style.width=(idx/(SCREEN_ORDER.length-1))*100+'%';
+}
+
+function goTo(id, isFirst){
+  const current=document.querySelector('.screen.active');
+  const next=document.getElementById(id);
+  if(current===next) return;
+  updateProgress(id);
+  const shapeKey = randomShapeFor(id);
+
+  if(isFirst){
+    if(current) current.classList.remove('active');
+    next.classList.add('active');
+    mascotBuild(shapeKey);
+    mascotStartScene(id);
+    mascotSetBubble(SCREEN_BUBBLES[id]);
+    return;
+  }
+
+  mascotSetBubble('');
+  mascotRunTransition(shapeKey, id, ()=>{
+    if(current) current.classList.remove('active');
+    next.classList.add('active');
+    mascotSetBubble(SCREEN_BUBBLES[id]);
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+}
+
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state={slots:[],vibe:null,freeText:'',dressCode:null,dressNote:''};
+
+/* ============================================================
+   SCREEN 1 — THE ASK
+   ============================================================ */
+const btnNo=document.getElementById('btn-no');
+const btnYes=document.getElementById('btn-yes');
+let noDodges=0;
+const NO_ESCALATION=[
+  'No','No?','Are you sure?','Really sure?','Think again','Last chance',
+  'Surely not','C\'mon','Please?','Pretty please?','I will wait forever',
+  'Not giving up','You sure though?','This is your future','Just click Yes',
+  'It is right there','👉 Yes is right there','I am not tired yet',
+  'Okay now I am tired','Fine, I will keep trying','Forever is not that long',
+  'Yes would be easier','Just saying','🥺','😭','My arms are tired',
+  'Of dodging, I mean','Okay this is a lot','You are really committed',
+  'Same','Yes. Just say yes.'
+];
+function moveNoButton(){
+  const w=btnNo.offsetWidth||90,h=btnNo.offsetHeight||56,margin=16;
+  const maxX=window.innerWidth-w-margin,maxY=window.innerHeight-h-margin;
+  btnNo.classList.add('evasive');
+  btnNo.style.left=Math.max(margin,Math.random()*maxX)+'px';
+  btnNo.style.top=Math.max(margin,Math.random()*maxY)+'px';
+}
+function dodge(e){
+  e.preventDefault();
+  noDodges++;
+  moveNoButton();
+  btnNo.textContent=NO_ESCALATION[Math.min(noDodges,NO_ESCALATION.length-1)];
+  
+  mascotSetBubble('uwa... don\'t go');
+}
+btnNo.addEventListener('mouseenter',dodge);
+btnNo.addEventListener('touchstart',dodge,{passive:false});
+btnNo.addEventListener('click',dodge);
+btnYes.addEventListener('click',()=>{
+  
+  mascotSetBubble('yesss let\'s go!');
+  setTimeout(()=>goTo('screen-calendar'),350);
+});
+
+/* ============================================================
+   SCREEN 2 — CALENDAR
+   ============================================================ */
+const TIME_SLOTS=[
+  {label:'9 – 11 AM',start:'9 AM',end:'11 AM'},
+  {label:'11 AM – 1 PM',start:'11 AM',end:'1 PM'},
+  {label:'1 – 3 PM',start:'1 PM',end:'3 PM'},
+  {label:'3 – 5 PM',start:'3 PM',end:'5 PM'},
+  {label:'5 – 7 PM',start:'5 PM',end:'7 PM'},
+  {label:'7 – 9 PM',start:'7 PM',end:'9 PM'},
+  {label:'9 – 11 PM',start:'9 PM',end:'11 PM'},
+];
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function buildCalendar(){
+  const table=document.getElementById('cal-table');
+  const today=new Date();
+  const days=[];
+  for(let i=0;i<14;i++){const d=new Date(today);d.setDate(today.getDate()+i);days.push(d);}
+  let thead='<thead><tr><th></th>';
+  days.forEach(d=>{thead+=`<th><span class="dow">${DOW[d.getDay()]}</span><span class="dnum">${d.getMonth()+1}/${d.getDate()}</span></th>`;});
+  thead+='</tr></thead>';
+  let tbody='<tbody>';
+  TIME_SLOTS.forEach((slot,idx)=>{
+    tbody+=`<tr><th>${slot.label}</th>`;
+    days.forEach(d=>{
+      const lbl=`${d.getMonth()+1}/${d.getDate()} (${DOW[d.getDay()]})`;
+      tbody+=`<td><div class="slot" data-date="${lbl}" data-idx="${idx}"></div></td>`;
+    });
+    tbody+='</tr>';
+  });
+  tbody+='</tbody>';
+  table.innerHTML=thead+tbody;
+  setupDragSelect(table);
+}
+function setupDragSelect(table){
+  let isDragging=false,dragMode='select';
+  function toggleCell(cell,mode){cell.classList.toggle('selected',mode==='select');}
+  function cellFromPoint(x,y){const el=document.elementFromPoint(x,y);return(el&&el.classList.contains('slot'))?el:null;}
+  table.addEventListener('mousedown',(e)=>{const cell=e.target.closest('.slot');if(!cell)return;isDragging=true;dragMode=cell.classList.contains('selected')?'deselect':'select';toggleCell(cell,dragMode);refreshSelection();e.preventDefault();});
+  table.addEventListener('mouseover',(e)=>{if(!isDragging)return;const cell=e.target.closest('.slot');if(!cell)return;toggleCell(cell,dragMode);refreshSelection();});
+  document.addEventListener('mouseup',()=>{isDragging=false;});
+  table.addEventListener('touchstart',(e)=>{const cell=e.target.closest('.slot');if(!cell)return;isDragging=true;dragMode=cell.classList.contains('selected')?'deselect':'select';toggleCell(cell,dragMode);refreshSelection();},{passive:true});
+  table.addEventListener('touchmove',(e)=>{if(!isDragging)return;const touch=e.touches[0];const cell=cellFromPoint(touch.clientX,touch.clientY);if(!cell)return;toggleCell(cell,dragMode);refreshSelection();e.preventDefault();},{passive:false});
+  document.addEventListener('touchend',()=>{isDragging=false;});
+}
+function mergeSlotsByDate(){
+  const byDate={};
+  state.slots.forEach(s=>{if(!byDate[s.date])byDate[s.date]=[];byDate[s.date].push(s.idx);});
+  const ranges=[];
+  Object.keys(byDate).forEach(date=>{
+    const idxs=byDate[date].sort((a,b)=>a-b);
+    let runStart=idxs[0],prev=idxs[0];
+    for(let i=1;i<=idxs.length;i++){
+      const cur=idxs[i];
+      if(cur===prev+1){prev=cur;continue;}
+      ranges.push({date,label:`${TIME_SLOTS[runStart].start} – ${TIME_SLOTS[prev].end}`});
+      runStart=cur;prev=cur;
+    }
+  });
+  return ranges;
+}
+function refreshSelection(){
+  const selected=Array.from(document.querySelectorAll('.slot.selected'));
+  state.slots=selected.map(cell=>({date:cell.dataset.date,idx:parseInt(cell.dataset.idx)}));
+  const summaryEl=document.getElementById('picked-summary');
+  const continueBtn=document.getElementById('cal-continue');
+  if(state.slots.length===0){summaryEl.innerHTML='';continueBtn.disabled=true;}
+  else{
+    const ranges=mergeSlotsByDate();
+    summaryEl.innerHTML='<ul class="pick-list">'+ranges.map(r=>`<li>${r.date} · ${r.label}</li>`).join('')+'</ul>';
+    continueBtn.disabled=false;
+  }
+}
+buildCalendar();
+
+/* ============================================================
+   SCREEN 3 — VIBE
+   ============================================================ */
+const VIBE_OPTIONS=[
+  {emoji:'🍜',label:'Get food somewhere'},{emoji:'🍣',label:'Try a new restaurant'},
+  {emoji:'🎬',label:'Watch a movie'},{emoji:'🍿',label:'Stay in for a movie night'},
+  {emoji:'☕',label:'Coffee and talk'},{emoji:'🧋',label:'Boba and a walk'},
+  {emoji:'🌳',label:'Walk in the park'},{emoji:'🌅',label:'Catch a sunset somewhere'},
+  {emoji:'🎨',label:'Something creative — art, pottery'},{emoji:'🎮',label:'Arcade or game cafe'},
+  {emoji:'📚',label:'Browse a bookstore'},{emoji:'🛍️',label:'Wander around shops'},
+  {emoji:'🎤',label:'Karaoke'},{emoji:'🏙️',label:'Rooftop / city view'},
+  {emoji:'🚲',label:'Bike ride'},{emoji:'🍰',label:'Dessert hunting'},
+  {emoji:'🎳',label:'Bowling'},{emoji:'🌃',label:'Night market'},
+  {emoji:'🧘',label:'Something quiet and slow'},{emoji:'❓',label:'Surprise me — you choose'},
+];
+let vibeRowEls=[];
+function buildVibeList(){
+  const wrap=document.getElementById('vibe-scroll');
+  wrap.innerHTML='';vibeRowEls=[];
+  VIBE_OPTIONS.forEach(opt=>{
+    const row=document.createElement('div');
+    row.className='vibe-row';
+    row.innerHTML=`<span class="emoji">${opt.emoji}</span><span>${opt.label}</span>`;
+    row.addEventListener('click',()=>selectVibe(row,opt.label));
+    wrap.appendChild(row);vibeRowEls.push(row);
+  });
+}
+function selectVibe(row,label){vibeRowEls.forEach(r=>r.classList.remove('selected'));row.classList.add('selected');state.vibe=label;}
+buildVibeList();
+document.getElementById('shuffle-btn').addEventListener('click',()=>{
+  const display=document.getElementById('shuffle-display');
+  let ticks=0;const totalTicks=18;let delay=60;
+  function tick(){
+    const idx=Math.floor(Math.random()*VIBE_OPTIONS.length);
+    display.textContent=VIBE_OPTIONS[idx].emoji+' '+VIBE_OPTIONS[idx].label;
+    ticks++;
+    if(ticks<totalTicks){delay*=1.13;setTimeout(tick,delay);}
+    else{
+      const finalIdx=Math.floor(Math.random()*VIBE_OPTIONS.length);
+      display.textContent='';
+      const row=vibeRowEls[finalIdx];
+      row.scrollIntoView({behavior:'smooth',block:'center'});
+      selectVibe(row,VIBE_OPTIONS[finalIdx].label);
+      row.style.transition='transform .3s ease';
+      row.style.transform='scale(1.02)';
+      setTimeout(()=>{row.style.transform='scale(1)';},300);
+    }
+  }
+  tick();
+});
+document.getElementById('freeText').addEventListener('input',(e)=>{state.freeText=e.target.value.trim();});
+
+/* ============================================================
+   SCREEN 3b — DRESS CODE
+   ============================================================ */
+const DRESS_OPTIONS=[
+  {emoji:'👗',label:'Casual — jeans, sneakers, easy vibes'},
+  {emoji:'🌸',label:'Cute casual — sundress, nice top'},
+  {emoji:'✨',label:'Smart casual — a little put-together'},
+  {emoji:'🥂',label:'Semi-formal — date-night ready'},
+  {emoji:'🎩',label:'Formal — dressed to impress'},
+  {emoji:'🧥',label:'Cozy / comfy — I want to be comfy'},
+  {emoji:'🎨',label:'Artsy / unique — I will surprise you'},
+  {emoji:'🌙',label:'Night-out glam — lets go all out'},
+  {emoji:'🏖️',label:'Summer / outdoor — light and breezy'},
+  {emoji:'❓',label:'No preference — surprise me!'},
+];
+let dressRowEls=[];
+function buildDressList(){
+  const wrap=document.getElementById('dress-scroll');
+  wrap.innerHTML='';dressRowEls=[];
+  DRESS_OPTIONS.forEach(opt=>{
+    const row=document.createElement('div');
+    row.className='vibe-row';
+    row.innerHTML=`<span class="emoji">${opt.emoji}</span><span>${opt.label}</span>`;
+    row.addEventListener('click',()=>selectDress(row,opt.label));
+    wrap.appendChild(row);dressRowEls.push(row);
+  });
+}
+function selectDress(row,label){dressRowEls.forEach(r=>r.classList.remove('selected'));row.classList.add('selected');state.dressCode=label;}
+buildDressList();
+document.getElementById('dressNote').addEventListener('input',(e)=>{state.dressNote=e.target.value.trim();});
+
+/* ============================================================
+   SCREEN 4 — SUMMARY
+   ============================================================ */
+function renderSummary(targetId){
+  const ranges=mergeSlotsByDate();
+  const timesHtml=ranges.length?'<ul>'+ranges.map(r=>`<li>${r.date} · ${r.label}</li>`).join('')+'</ul>':'—';
+  const rows=[
+    {label:'Times picked',val:timesHtml},
+    {label:'Activity',val:state.vibe||'—'},
+    {label:'Dress code',val:state.dressCode||'—'},
+  ];
+  let html='';
+  rows.forEach(r=>{html+=`<div class="summary-row"><span class="label">${r.label}</span><span class="val">${r.val}</span></div>`;});
+  if(state.freeText) html+=`<div class="summary-row"><span class="label">In her words</span><span class="val">${state.freeText}</span></div>`;
+  if(state.dressNote) html+=`<div class="summary-row"><span class="label">Outfit note</span><span class="val">${state.dressNote}</span></div>`;
+  document.getElementById(targetId).innerHTML=html;
+}
+const observer=new MutationObserver(()=>{
+  if(document.getElementById('screen-confirm').classList.contains('active')) renderSummary('summary-box');
+});
+observer.observe(document.getElementById('screen-confirm'),{attributes:true});
+
+/* ============================================================
+   SEND
+   ============================================================ */
+async function sendPlan(){
+  renderSummary('summary-box-final');
+  const ranges=mergeSlotsByDate();
+  const btn=document.getElementById('send-btn');
+  if(typeof emailjs === 'undefined'){
+    alert('Email service did not load (probably blocked by network/ad-blocker). Try disabling ad-blocker or check your internet connection.');
+    return;
+  }
+  btn.disabled=true;btn.textContent='Sending...';
+  try{
+    await emailjs.send('YOUR_SERVICE_ID','YOUR_TEMPLATE_ID',{
+      times:ranges.length?ranges.map(r=>`${r.date} · ${r.label}`).join('\n'):'No time selected',
+      activity:state.vibe||'Not selected',
+      dress_code:state.dressCode||'Not selected',
+      dress_note:state.dressNote||'No note',
+      message:state.freeText||'No message',
+      submitted_at:new Date().toLocaleString()
+    });
+    goTo('screen-success');
+  }catch(err){
+    console.error(err);
+    alert('Email failed to send. Check your EmailJS IDs.');
+  }finally{
+    btn.disabled=false;btn.textContent='Send it';
+  }
+}
+</script>
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  if (typeof emailjs !== 'undefined') {
+    emailjs.init("YOUR_PUBLIC_KEY");
+  } else {
+    console.warn('EmailJS failed to load.');
+  }
+</script>
+</body>
+</html>
